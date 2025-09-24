@@ -33,7 +33,7 @@ async function findOrCreateUser(user) {
     const [firstName, ...lastNameParts] = fullName.split(" ");
     const lastName = lastNameParts.join(" ");
 
-    const email = user.emails?.[0]?.value || null;
+    const email = user.emails?.[0]?.value;
     const image_url = user.photos?.[0]?.value || null;
 
     await db.query(
