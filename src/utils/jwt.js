@@ -48,3 +48,46 @@ module.exports = {
     hashPassword,
     comparePassword
 }
+
+
+async function createProduct(product, mainImage, images) {
+  const entries = Object.entries(product).filter(([key]) =>
+    allowedFields.includes(key)
+  );
+  if (entries.length === 0) {
+    const error = new Error("No fields to update");
+    error.statusCode = 400;
+    throw error;
+  }
+  const keys = entries.map(([key]) => `${key}`).join(", ");
+  const values = entries.map(([, value]) => value);
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const id = await productModel.createProduct(keys, values, connection);
+    await productUserModel.createProductUser(
+      id,
+      product.current_user_id,
+      connection
+    );
+    if (mainImage) {
+      const uploaded = await uploadToCloudinary(mainImage);
+      await insertProductImage(uploaded.url, id, true, connection);
+    }
+    if (images && images.length > 0) {
+      for (const image of images) {
+        const uploaded = await uploadToCloudinary(image);
+        await insertProductImage(uploaded.url, id, false, connection);
+      }
+    }
+    await connection.commit();
+    connection.release();
+    return id;
+  } catch (error) {
+    await connection.rollback();
+    connection.release();
+    throw error;
+  }
+}

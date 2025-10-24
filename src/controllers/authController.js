@@ -64,4 +64,27 @@ async function userLogout(req, res) {
 
 
 }
-module.exports = { createUser, userSignIn, refreshActiveToken, userLogout };
+async function googleCallBack(req,res){
+    try {
+
+        const { user, token, refreshToken } = req.user;
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            // secure: true,
+            // sameSite: 'none',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        })
+        res.status(200).json({ message: "success", user, token });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+
+
+}
+module.exports = {
+  createUser,
+  userSignIn,
+  refreshActiveToken,
+  userLogout,
+  googleCallBack,
+};

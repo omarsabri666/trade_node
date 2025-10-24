@@ -7,7 +7,6 @@ function authMiddleware(req,res,next){
     if(!token) return res.status(401).json({message:"Unauthorized"});
     try {
         const payload = verifyToken(token);
-        console.log(payload,'payload');
         req.user = payload;
         next();
     } catch (error) {
